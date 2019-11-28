@@ -1,6 +1,7 @@
 import cx_Oracle
 import pymysql.cursors
-
+import pandas as pd
+from sqlalchemy import create_engine
 
 class db_migrate:
 
@@ -37,8 +38,23 @@ class db_migrate:
 
         query = conn_from.cursor().execute(self.script)
 
-        for row in query:
-            print(row)
+        df_table = pd.read_sql(self.script, con=conn_from)
+
+        sqlEngine = create_engine('mysql+pymysql://'+self.db_to_user+':'+self.db_to_password+'@'+self.db_to_host+'/'+self.db_to_dbname)
+        dbConnection = sqlEngine.connect()
+
+        frame = df_table.to_sql('tbl3', dbConnection, if_exists='fail')
+
+'''
+        with conn_to.cursor() as cursor:
+            sql = "CREATE TABLE tb2 %s"
+            cursor.execute(sql, (query))
+
+        # connection is not autocommit by default. So you must commit to save
+        # your changes.
+        conn_to.commit()
+'''
+
 
 scrpt = "select rmp.id_mp from alex.r_rest_mp@alex rmp where ROWNUM <= 2"
 test_object = db_migrate('df_reader', 'd3760aecfa', '91.194.17.66', '13622', 'vitaprod', 'usr', '12345678', '127.0.0.1', 'testdb', scrpt)
